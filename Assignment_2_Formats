@@ -1,0 +1,96 @@
+# Formats for the various components in Assignment 2
+
+## Main repository file:
+### Case sensitive storage but case insensitive search
+
+FILENAME:RELATIVE_PATH_TO_FILE_WRT_CLIENT:CLIENT_ALIAS
+
+Japan Tour.jpg:pictures/japan/Japan Tour.jpg:Eve's Laptop
+
+## Client Info file: to keep track of all client computers connected to the CRS currently
+
+ALIAS:CLIENT_IP:CLIENT_PORT:CLIENT_DOWNLOAD_PORT
+
+Bob's Laptop:192.168.2.4:9333:9722
+
+## Client command line
+
+search filename
+get [entry_number] output_file_name
+get client_alias relative_path output_file_name
+share relative_path_to_file_wrt_client
+del relative_path_to_file_wrt_client
+exec client_alias shell_command
+
+### Examples:
+search "Bob.txt"
+get [2] "Giant Gummy Lizard.pdf"
+get "Bob's Computer" "cd.pdf" "xyz.pdf"
+
+share "pictures/japan/Japan Tour.jpg"
+del "pictures/japan/Japan Tour.jpg"
+exec "Mary\'s Computer" "ls -la"
+
+### Disclaimer: filename, client_alias, relative_path, output_file_name in the client command-line are to be quoted in C-style e.g. hello.jpg, "Bob\'s computer", "\"It\'s complicated\".jpg", etc. Also names that do not need to be quoted (e.g. hello.jpg) may or may not be quoted.
+
+### Format of client output (returned mirrors) on **search** command
+FOUND:NO_OF_HITS
+[SNO] FILENAME:RELATIVE_PATH_TO_FILE_WRT_CLIENT:CLIENT_ALIAS:CLIENT_IP:CLIENT_PORT
+[SNO] FILENAME:RELATIVE_PATH_TO_FILE_WRT_CLIENT:CLIENT_ALIAS:CLIENT_IP:CLIENT_PORT
+
+FOUND:2
+[1] Bob.txt:files/bob's files/Bob.txt:Bob's Laptop:192.168.1.2:8465
+[2] Japan Tour.jpg:pictures/japan/Japan Tour.jpg:Eve's Computer:192.168.1.200:8796
+
+FOUND:0
+
+#### Note: The search string should be considered as a substring from the start of the filename only
+
+### Format of client output on **get** command
+##### if successful
+SUCCESS:RELATIVE_FILE_PATH_IN_CURRENT_CLIENT
+#### else
+FAILURE:ERRMSG
+ERRMSG is one of {FILE_NOT_FOUND, CLIENT_OFFLINE, ALREADY_EXISTS, INVALID_ARGUMENTS}
+
+### Format of client output on **share** command
+#### if successful
+SUCCESS:FILE_SHARED
+#### Else
+FAILURE:ERRMSG
+ERRMSG is one of {FILE_NOT_FOUND, SERVER_OFFLINE, INVALID_ARGUMENTS}
+
+### Format of output to **del** command
+#### if successful
+SUCCESS:FILE_REMOVED
+#### else
+FAILURE:ERRMSG
+ERRMSG is one of {FILE_NOT_FOUND, SERVER_OFFLINE, INVALID_ARGUMENTS}
+
+### Format of output to **exec** command
+The output should be the exact dump of the shell command as it it was executed on the server and redirected to a file.
+
+#### if successfully contacted remote (if command fails on remote, it is still considered success)
+#### A command is considered to be failed only when the remote cannot be contacted or if the arguments provided were invalid
+SUCCESS:
+files
+pictures
+japan
+
+SUCCESS:
+bash: psod: command not found...
+
+#### else
+FAILURE:
+
+### Please ensure that your program is robust and doesn't crash. Both the server and the client programs must stay inside the provided "root" directory at all times. All file path must be relative to this "root"
+
+### How we'll call the client
+./executable client_alias client_ip client_port server_ip server_port downloading_port client_root
+
+eg. ./client "Bob's Computer" 127.0.0.9 8756 127.0.0.2 12345 14000 ~/Desktop
+
+### How we'll call the server
+./executable server_ip server_port main_repofile client_list_file server_root
+
+eg. ./server 127.0.0.2 12345 Main_Repository_File.txt Client_Info_File.txt ~/Raja/CRS
